@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "veil"
-version = "0.1.0"
+version = "0.0.1"
 description = ""
 authors = [
   "Angelo Impedovo <angelo.impedovo@niuma.it>",
@@ -47,12 +47,15 @@ version_variable = [
 version_toml = [
     "pyproject.toml:tool.poetry.version"
 ]
+branch = "main"
+tag_commit = true
+commit_author = "semantic-release <semantic-release@veil.org>"
+commit_subject = "v{version} [skip cq][release-tag]"
 version_source = "tag"
 commit_version_number = true
-ignore_token_for_push = true
-upload_to_pypi = false
-upload_to_release = false
+upload_to_release = true
 upload_to_repository = false
+build_command = "poe build_wheel"
 
 [tool.poe.tasks.clean]
 shell = """
@@ -99,7 +102,24 @@ shell = """
     make html
 """
 
+[tool.poe.tasks.build_wheel]
+shell = """
+    poetry build --format wheel
+"""
+
+
 [tool.poe.tasks.release]
 shell = """
-    echo "Starting release"
+    export GH_TOKEN="${gh_token}" && \
+    git config --global user.name "semantic-release" && \
+    git config --global user.email "semantic-release@veil.org" && \
+    git config --system --add safe.directory '*' && \
+    git pull && \
+    poetry run semantic-release publish
 """
+
+    [[tool.poe.tasks.release.args]]
+    name = "gh_token"
+    options = ["--github-token"]
+    help = "GITHUB_TOKEN value passed from github action"
+    default = ""
