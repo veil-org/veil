@@ -30,7 +30,7 @@ def _get_repo_info() -> Tuple[str, str, str]:
         print(f"Invalid Git repository: {e}")
     except NoSuchPathError as e:
         print(f"Invalid Git path: {e}")
-    
+
     if repo is not None:
 
         try:
@@ -50,58 +50,57 @@ def _get_repo_info() -> Tuple[str, str, str]:
             print(f"{MLFLOW_GIT_BRANCH}={branch_name}")
         except Exception:
             print(f"{MLFLOW_GIT_BRANCH} is None")
-    
-    return repo_uri, sha_commit, branch_name
 
+    return repo_uri, sha_commit, branch_name
 
 
 class Autologger:
 
     def __init__(
-        self, 
-        is_autolog_enabled:bool = True,
-        tracking_uri:str = mlflow.get_tracking_uri(),
-        experiment_name:str = Experiment.DEFAULT_EXPERIMENT_NAME,
+        self,
+        is_autolog_enabled: bool = True,
+        tracking_uri: str = mlflow.get_tracking_uri(),
+        experiment_name: str = Experiment.DEFAULT_EXPERIMENT_NAME,
     ):
         self.is_autolog_enabled = is_autolog_enabled
         self.tracking_uri = tracking_uri
         self.experiment_name = experiment_name
 
         # members with intended protected access
-        self._current_session:Optional[AutologSession] = None
+        self._current_session: Optional[AutologSession] = None
 
     @property
     def is_autolog_enabled(self) -> bool:
         return self.__is_autolog_enabled
-    
+
     @is_autolog_enabled.setter
-    def is_autolog_enabled(self, value:bool) -> None:
-        self.__is_autolog_enabled:bool = check_type(value, bool)
+    def is_autolog_enabled(self, value: bool) -> None:
+        self.__is_autolog_enabled: bool = check_type(value, bool)
 
     @property
     def tracking_uri(self) -> str:
         return self.__tracking_uri
-    
+
     @tracking_uri.setter
-    def tracking_uri(self, value:str) -> None:
-        self.__tracking_uri:str = check_type(value, str)
+    def tracking_uri(self, value: str) -> None:
+        self.__tracking_uri: str = check_type(value, str)
 
     @property
     def experiment_name(self) -> str:
         return self.__experiment_name
-    
+
     @experiment_name.setter
-    def experiment_name(self, value:str) -> None:
-        self.__experiment_name:str = check_type(value, str)
+    def experiment_name(self, value: str) -> None:
+        self.__experiment_name: str = check_type(value, str)
 
     def start_session(
-        self, 
-        name:Optional[str] = None,
-        log_tags:StringDict = dict()
+        self,
+        name: Optional[str] = None,
+        log_tags: StringDict = dict()
     ):
         return AutologSession(
-            autologger=self, 
-            name=name, 
+            autologger=self,
+            name=name,
             log_tags=log_tags
         )
 
@@ -112,14 +111,12 @@ class Autologger:
         log_tags: StringDict = dict()
     ):
         return Run(
-            autologger = self,
-            name = name,
-            log_params = log_params,
-            log_tags = log_tags
+            autologger=self,
+            name=name,
+            log_params=log_params,
+            log_tags=log_tags
         )
-    
 
-    
 
 class MlflowIsolated:
 
@@ -128,9 +125,9 @@ class MlflowIsolated:
         autologger: Autologger
     ):
         # members with intended private access
-        self.__autologger:Autologger = check_type(autologger, Autologger)
+        self.__autologger: Autologger = check_type(autologger, Autologger)
 
-    def __call__(self, func:Callable):
+    def __call__(self, func: Callable):
         """
         Execute the decorator as well as the wrapped function
         """
@@ -138,25 +135,26 @@ class MlflowIsolated:
 
         @functools.wraps(func)
         def isolation_wrapper(*args, **kwargs):
-            result:Any = None
+            result: Any = None
 
             if self.__autologger.is_autolog_enabled and self.__autologger._current_session is not None:
 
                 # 3) switch the run current active run (which is paused) within mlflow with a new one
-                past_active_run:ActiveRun = mlflow.active_run()
+                past_active_run: ActiveRun = mlflow.active_run()
                 if past_active_run:
                     mlflow.end_run(RunStatus.to_string(RunStatus.RUNNING))
 
                 # 1) switch the tracking uri currently used by mlflow to the one in the autologger
-                past_tracking_uri:str = mlflow.get_tracking_uri()
+                past_tracking_uri: str = mlflow.get_tracking_uri()
                 mlflow.set_tracking_uri(self.__autologger.tracking_uri)
 
                 # 2) switch the experiment currently used by mlflow to the one in the autologger
-                past_active_experiment_id:str = _active_experiment_id()
-                mlflow.set_experiment(experiment_name=self.__autologger.experiment_name)
+                past_active_experiment_id: str = _active_experiment_id()
+                mlflow.set_experiment(
+                    experiment_name=self.__autologger.experiment_name)
 
                 # performs the function workload
-                result = func(*args, **kwargs)                
+                result = func(*args, **kwargs)
 
                 # 5) switch back to the previosuly activated experiment
                 mlflow.set_experiment(experiment_id=past_active_experiment_id)
@@ -168,32 +166,30 @@ class MlflowIsolated:
 
                 # 4) switch back to the previously activated run
                 if past_active_run:
-                    mlflow.start_run(run_id = past_active_run.info.run_id)
+                    mlflow.start_run(run_id=past_active_run.info.run_id)
                 past_active_run = None
             else:
                 result = func(*args, **kwargs)
-            
+
             return result
 
         return isolation_wrapper
 
 
-
-
 class AutologSession:
 
-    def __init__(self, 
-        autologger:Autologger,
-        name:Optional[str] = None,
-        log_tags:StringDict = dict()
-    ):
+    def __init__(self,
+                 autologger: Autologger,
+                 name: Optional[str] = None,
+                 log_tags: StringDict = dict()
+                 ):
         self.name = name
         self.log_tags = log_tags
 
         # members with intended private access
-        self.__autologger:Autologger = check_type(autologger, Autologger)
-        self.__run_id:Optional[str] = None
-        self.__past_session:Optional[AutologSession] = None
+        self.__autologger: Autologger = check_type(autologger, Autologger)
+        self.__run_id: Optional[str] = None
+        self.__past_session: Optional[AutologSession] = None
 
     @property
     def autologger(self) -> Autologger:
@@ -206,20 +202,18 @@ class AutologSession:
     @property
     def name(self) -> Optional[str]:
         return self.__name
-    
+
     @name.setter
-    def name(self, value:Optional[str]) -> None:
-        self.__name:Optional[str] = check_type(value, Optional[str])
+    def name(self, value: Optional[str]) -> None:
+        self.__name: Optional[str] = check_type(value, Optional[str])
 
     @property
     def log_tags(self) -> StringDict:
         return self.__log_tags
 
     @log_tags.setter
-    def log_tags(self, value:StringDict) -> None:
-        self.__log_tags:StringDict = check_type(value, StringDict)
-
-
+    def log_tags(self, value: StringDict) -> None:
+        self.__log_tags: StringDict = check_type(value, StringDict)
 
     def __enter__(self):
         # switch the session currently used by the autologger to this one
@@ -232,12 +226,11 @@ class AutologSession:
             if self.autologger.is_autolog_enabled:
                 # immediately starts and stops a novel parent run associated with this context
                 # note that this run will be resumed within run-annotated functions.
-                run:ActiveRun = mlflow.start_run(run_name=self.name)
-                mlflow.end_run(status = RunStatus.to_string(RunStatus.RUNNING))
+                run: ActiveRun = mlflow.start_run(run_name=self.name)
+                mlflow.end_run(status=RunStatus.to_string(RunStatus.RUNNING))
                 self.__run_id = run.info.run_id
-                
-        do_enter()
 
+        do_enter()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
 
@@ -247,31 +240,21 @@ class AutologSession:
             if self.autologger.is_autolog_enabled:
 
                 # immediately starts and stops the parent run associated with this context
-                # note that it is terminated with a given status, according to exceptions within the 
+                # note that it is terminated with a given status, according to exceptions within the
                 # context manager.
-                termination_status:RunStatus = RunStatus.FINISHED
+                termination_status: RunStatus = RunStatus.FINISHED
                 if exc_type:
                     termination_status = RunStatus.FAILED
-                mlflow.start_run(run_id = self.autologger._current_session.run_id)
+                mlflow.start_run(
+                    run_id=self.autologger._current_session.run_id)
                 mlflow.end_run(status=RunStatus.to_string(termination_status))
                 self.__run_id = None
-
 
         do_exit()
 
         # switch back the session currently used by the autologger to the previous one
         self.autologger._current_session = self.__past_session
         self.__past_session = None
-
-
-
-
-
-
-        
-    
-
-
 
 
 class Run:
@@ -284,30 +267,29 @@ class Run:
         log_tags: StringDict = dict()
     ):
         # members with intended private access
-        self.__autologger:Autologger = check_type(autologger, Autologger)
-        self.__name:Optional[str] = check_type(name, Optional[str])
-        self.__log_params:Optional[StringList] = check_type(log_params, Optional[StringList])
-        self.__log_tags:StringDict = check_type(log_tags, StringDict)
+        self.__autologger: Autologger = check_type(autologger, Autologger)
+        self.__name: Optional[str] = check_type(name, Optional[str])
+        self.__log_params: Optional[StringList] = check_type(
+            log_params, Optional[StringList])
+        self.__log_tags: StringDict = check_type(log_tags, StringDict)
 
-    
     @property
     def autologger(self) -> Autologger:
         return self.__autologger
-    
+
     @property
     def name(self) -> Optional[str]:
         return self.__name
-    
+
     @property
     def log_params(self) -> Optional[StringList]:
         return self.__log_params
-    
+
     @property
     def log_tags(self) -> StringDict:
         return self.__log_tags
 
-    def __call__(self, func:Callable):
-
+    def __call__(self, func: Callable):
         """
         Execute the decorator as well as the wrapped function
         """
@@ -316,13 +298,14 @@ class Run:
         @functools.wraps(func)
         @MlflowIsolated(autologger=self.__autologger)
         def wrapper(*args, **kwargs):
-            result:Any = None
+            result: Any = None
 
             if self.__autologger.is_autolog_enabled and self.__autologger._current_session:
 
                 # resume the parent run
-                mlflow.start_run(run_id = self.__autologger._current_session.run_id)
-                
+                mlflow.start_run(
+                    run_id=self.__autologger._current_session.run_id)
+
                 # retrieves the tags from the context
                 tags: StringDict = self.__autologger._current_session.log_tags.copy()
 
@@ -338,10 +321,10 @@ class Run:
                 })
 
                 # uses the user provided run name instead of function name, if any
-                _run_name:str = func.__name__
+                _run_name: str = func.__name__
                 if not self.__name is None:
                     _run_name = self.__name
-                
+
                 # starts the child run with a context manager (eventually closing it gracefully in case of exceptions)
                 with mlflow.start_run(run_name=_run_name, nested=True) as active_run:
 
@@ -350,7 +333,7 @@ class Run:
 
                     # ...the params with which the funciton has been called
                     for k, v in kwargs.items():
-                        if self.__log_params is not None and len(self.__log_params)>0:
+                        if self.__log_params is not None and len(self.__log_params) > 0:
                             if k in self.log_params:
                                 mlflow.log_param(k, v)
                         else:
@@ -360,14 +343,13 @@ class Run:
                     result = func(*args, **kwargs)
 
                 # stops the parent run
-                mlflow.end_run() 
+                mlflow.end_run()
 
             else:
                 result = func(*args, **kwargs)
             return result
-        
+
         return wrapper
-    
 
 
 if __name__ == "__main__":
@@ -386,7 +368,6 @@ if __name__ == "__main__":
     def faulty_operator():
         raise ValueError
 
-
     with start_session(name="my_parent_faboulous_run"):
         my_operator()
 
@@ -398,6 +379,5 @@ if __name__ == "__main__":
             my_operator()
 
         my_operator()
-    
 
     my_operator()

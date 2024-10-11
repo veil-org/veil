@@ -83,3 +83,8 @@ shell = """
 shell = """
     poetry install --no-interaction --no-root --only=release
 """
+
+[tool.poe.tasks.release]
+shell = """
+    echo "Starting release"
+"""
