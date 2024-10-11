@@ -1,0 +1,85 @@
+[tool.poetry]
+name = "veil"
+version = "0.1.0"
+description = ""
+authors = [
+  "Angelo Impedovo <angelo.impedovo@niuma.it>",
+  "Giuseppe Rizzo <giuseppe.rizzo@niuma.it>",
+  "Antonio Di Mauro <antonio.dimauro@niuma.it>"
+]
+readme = "README.md"
+
+[[tool.poetry.source]]
+name = "public_pypi"
+url = "https://pypi.org/simple/"
+priority = "supplemental"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mlflow-skinny = ">=1.29.0"
+urllib3 = ">=1.26.15"
+typeguard = "^4.1.5"
+gitpython = "^3.1.40"
+
+[tool.poetry.group.dev.dependencies]
+pytest-resource-path = "1.3.0"
+pytest = ">=5.2"
+pytest-cov = ">=2.12.1"
+pytest-mock = "^3.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.release.dependencies]
+python-semantic-release = "^7.33.2"
+
+[tool.semantic_release]
+version_variable = [
+    "veil/__init__.py:__version__"
+]
+version_toml = [
+    "pyproject.toml:tool.poetry.version"
+]
+version_source = "tag"
+commit_version_number = true
+ignore_token_for_push = true
+upload_to_pypi = false
+upload_to_release = false
+upload_to_repository = false
+
+[tool.poe.tasks.clean]
+shell = """
+    find . | grep -E "(/__pycache__$|\\.pytest_cache$|\\.metaflow$|dist$|wheelhouse$)" | xargs rm -rf
+"""
+
+[tool.poe.tasks.install]
+shell = """
+    poetry install --no-interaction --only-root
+"""
+
+[tool.poe.tasks.test]
+shell = """
+    poetry run pytest --cov=./ --cov-report xml:test-reports/coverage.xml --junit-xml test-reports/results.xml tests
+"""
+envfile=".env"
+
+[tool.poe.tasks.install_all_dependencies]
+shell = """
+    poetry install --no-interaction --no-root
+"""
+
+[tool.poe.tasks.install_main_dependencies]
+shell = """
+    poetry install --no-interaction --no-root --only=main
+"""
+
+[tool.poe.tasks.install_dev_dependencies]
+shell = """
+    poetry install --no-interaction --no-root --only=main,dev
+"""
+
+[tool.poe.tasks.install_release_dependencies]
+shell = """
+    poetry install --no-interaction --no-root --only=release
+"""

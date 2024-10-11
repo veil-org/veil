@@ -1,0 +1,12 @@
+**/__pycache__
+**/test-reports
+**/.pytest_cache
+**/.mypy_cache
+**/.dist
+**/*.pyc
+**/*.csv
+**/.mlruns
+.coverage
+dist
+mlruns
+htmlcov

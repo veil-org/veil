@@ -1,0 +1,72 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Python 3",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "..",
+		"args": {
+			"POETRY_VERSION": "1.6.1",
+			"POETRY_CORE_VERSION": "1.7.0",
+			"POETHEPOET_VERSION": "0.20.0",
+			"PRE_COMMIT_VERSION": "3.3.3",
+			"INSTALL_GIT": "yes",
+			"GIT_VERSION": "1:2.20.1-2+deb10u8",
+			"BASE_IMAGE": "mcr.microsoft.com/vscode/devcontainers/python",
+			"TAG": "0-3.10-buster",
+			"INSTALL_DEV_TOOLS": "yes"
+		}
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/mypy:2": {},
+		"ghcr.io/devcontainers-contrib/features/pylint:2": {},
+		"ghcr.io/devcontainers-contrib/features/isort:2": {}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	"postStartCommand": "cat",
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "pre-commit install --hook-type commit-msg && poe install_dev_dependencies && poe install && echo 'source $(poetry env info --path)/bin/activate' >> ~/.bashrc",
+	
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Configure the settings to use for VS Code.
+			"settings": {
+				"editor.rulers": [79],
+				// autoDocstring settings
+				"autoDocstring.docstringFormat": "numpy",
+				"autoDocstring.includeName": true,
+				"autoDocstring.includeExtendedSummary": true,
+				// pytest settings
+				"python.testing.pytestArgs": ["tests"],
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"args": ["-l"]
+					}
+				}
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"njpwerner.autodocstring",
+				"mhutchie.git-graph",
+				"ms-python.autopep8",
+				"ms-python.pylint",
+				"tamasfe.even-better-toml"
+			]
+		}
+	},
+	
+	"remoteUser": "root"
+}

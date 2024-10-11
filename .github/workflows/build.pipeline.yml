@@ -1,0 +1,59 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Veil CI
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+
+  prepare_environment:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Docker buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to ghcr
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Build Environment
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/veil-devcontainer:latest \
+        --build-arg POETRY_VERSION=1.6.1 \
+        --build-arg POETRY_CORE_VERSION=1.7.0 \
+        --build-arg POETHEPOET_VERSION=0.20.0 \
+        --build-arg PRE_COMMIT_VERSION=3.3.3 \
+        --build-arg INSTALL_GIT=yes \
+        --build-arg GIT_VERSION=1:2.20.1-2+deb10u8 \
+        --build-arg BASE_IMAGE=mcr.microsoft.com/vscode/devcontainers/python \
+        --build-arg TAG=0-3.10-buster \
+        --build-arg INSTALL_DEV_TOOLS=yes \
+        --build-arg INSTALL_GIT=yes \
+        -f ./.devcontainer/Dockerfile \
+        --push .
+
+  code_quality:
+
+    runs-on: ubuntu-latest
+    needs: prepare_environment
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/veil-devcontainer:latest
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install code quality deps
+      run: |
+        poe install_all_dependencies
+    - name: Test with pytest
+      run: |
+        poe test
