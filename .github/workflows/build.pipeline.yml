@@ -68,6 +68,9 @@ jobs:
       image: ghcr.io/${{ github.repository_owner }}/veil-devcontainer:latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install code quality deps
+      run: |
+        poe install_release_dependencies
     - name: Trigger distribution
       run: |
         poe release --github-token ${{ secrets.GITHUB_TOKEN }}
