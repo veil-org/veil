@@ -43,7 +43,7 @@ version_toml = [
 ]
 branch = "main"
 tag_commit = true
-commit_author = "semantic-release <semantic-release@niuma.it>"
+commit_author = "semantic-release <semantic-release@veil.org>"
 commit_subject = "v{version} [skip cq][release-tag]"
 version_source = "tag"
 commit_version_number = true
@@ -89,6 +89,8 @@ shell = """
 [tool.poe.tasks.release]
 shell = """
     export GH_TOKEN="${gh_token}" && \
+    git config --global user.name "semantic-release" && \
+    git config --global user.email "semantic-release@veil.org" && \
     git config --system --add safe.directory '*' && \
     poetry run semantic-release publish
 """
