@@ -32,6 +32,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
+
 [tool.poetry.group.release.dependencies]
 python-semantic-release = "^7.33.2"
 
