@@ -5,8 +5,11 @@
 **/*.pyc
 **/*.csv
 .coverage
+.git/
 .gitattributes
 .gitignore
 htmlcov
 dist
-.git
+docs/_build
+docs/_static
+docs/_templates
