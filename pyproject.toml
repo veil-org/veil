@@ -41,11 +41,13 @@ version_variable = [
 version_toml = [
     "pyproject.toml:tool.poetry.version"
 ]
+branch = "main"
+tag_commit = true
+commit_author = "semantic-release <semantic-release@niuma.it>"
+commit_subject = "v{version} [skip cq][release-tag]"
 version_source = "tag"
 commit_version_number = true
-ignore_token_for_push = true
-upload_to_pypi = false
-upload_to_release = false
+upload_to_release = true
 upload_to_repository = false
 
 [tool.poe.tasks.clean]
@@ -86,5 +88,11 @@ shell = """
 
 [tool.poe.tasks.release]
 shell = """
-    echo "Starting release"
+    export GH_TOKEN="$gh_token" && poetry run semantic-release publish -D
 """
+
+    [[tool.poe.tasks.release.args]]
+    name = "gh_token"
+    options = ["--github-token"]
+    help = "GITHUB_TOKEN value passed from github action"
+    default = ""
