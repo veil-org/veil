@@ -26,10 +26,16 @@ pytest-resource-path = "1.3.0"
 pytest = ">=5.2"
 pytest-cov = ">=2.12.1"
 pytest-mock = "^3.12.0"
+sphinx-rtd-theme = "3.0.1"
+myst-parser = "4.0.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+
+
 
 [tool.poetry.group.release.dependencies]
 python-semantic-release = "^7.33.2"
@@ -82,6 +88,15 @@ shell = """
 [tool.poe.tasks.install_release_dependencies]
 shell = """
     poetry install --no-interaction --no-root --only=release
+"""
+
+[tool.poe.tasks.docs]
+interpreter = "bash"
+shell = """
+    sphinx-apidoc -o docs veil/
+    cd docs
+    make clean
+    make html
 """
 
 [tool.poe.tasks.release]

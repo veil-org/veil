@@ -1,15 +1,12 @@
 from __future__ import annotations
+from typing import Any, Callable, Optional, Tuple
+import functools
+from typeguard import check_type
 
 import mlflow
-import functools
-
-from mlflow.client import MlflowClient
-from mlflow.tracking.fluent import _get_experiment_id, ActiveRun
 from mlflow.entities import Experiment, RunStatus
+from mlflow.tracking.fluent import _get_experiment_id, ActiveRun
 from mlflow.utils.mlflow_tags import MLFLOW_GIT_COMMIT, MLFLOW_GIT_BRANCH, MLFLOW_GIT_REPO_URL
-
-from typing import Any, Callable, Optional, Tuple
-from typeguard import check_type
 
 from veil.types import StringDict, StringList
 
@@ -55,6 +52,8 @@ def _get_repo_info() -> Tuple[str, str, str]:
 
 
 class Autologger:
+    """ Implements the auto-logging strategy.
+    """
 
     def __init__(
         self,
@@ -98,6 +97,20 @@ class Autologger:
         name: Optional[str] = None,
         log_tags: StringDict = dict()
     ):
+        """Starts a new session.
+
+        Parameters
+        ----------
+        name : Optional[str], optional
+            the experiment name, by default None
+        log_tags : StringDict, optional
+            the tags to be logged, by default dict()
+
+        Returns
+        -------
+        AutologSession
+            teh autolog session.
+        """
         return AutologSession(
             autologger=self,
             name=name,
@@ -110,6 +123,22 @@ class Autologger:
         log_params: Optional[StringList] = None,
         log_tags: StringDict = dict()
     ):
+        """Executes a new run.
+
+        Parameters
+        ----------
+        name : Optional[str], optional
+            the run name, by default None
+        log_params : Optional[StringList], optional
+            the params to be logged, by default None
+        log_tags : StringDict, optional
+            the tags to be logged, by default dict()
+
+        Returns
+        -------
+        Run
+            the experiment run.
+        """
         return Run(
             autologger=self,
             name=name,
@@ -119,6 +148,8 @@ class Autologger:
 
 
 class MlflowIsolated:
+    """ Isolates an Mlflow experiment.
+    """
 
     def __init__(
         self,
@@ -177,12 +208,24 @@ class MlflowIsolated:
 
 
 class AutologSession:
+    """ Wraps an autolog session.
 
-    def __init__(self,
-                 autologger: Autologger,
-                 name: Optional[str] = None,
-                 log_tags: StringDict = dict()
-                 ):
+    Parameters
+        ----------
+        autologger : Autologger
+            the autolog object
+        name : Optional[str], optional
+            the experiment name, by default None
+        log_tags : StringDict, optional
+            the tags to be logged, by default dict()
+    """
+
+    def __init__(
+        self,
+        autologger: Autologger,
+        name: Optional[str] = None,
+        log_tags: StringDict = dict(),
+    ):
         self.name = name
         self.log_tags = log_tags
 
@@ -258,13 +301,26 @@ class AutologSession:
 
 
 class Run:
+    """ Encapsulates an Mlflow run with auto-logging features.
+
+    Parameters
+    ----------
+    autologger : Autologger
+        the autologger object
+    name : Optional[str], optional
+        the experiment name, by default None
+    log_params : Optional[StringList], optional
+        the params to be logged, by default None
+    log_tags : StringDict, optional
+        the tags to be logged, by default dict()
+    """
 
     def __init__(
         self,
         autologger: Autologger,
         name: Optional[str] = None,
         log_params: Optional[StringList] = None,
-        log_tags: StringDict = dict()
+        log_tags: StringDict = dict(),
     ):
         # members with intended private access
         self.__autologger: Autologger = check_type(autologger, Autologger)
