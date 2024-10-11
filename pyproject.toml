@@ -101,6 +101,7 @@ shell = """
     git config --global user.name "semantic-release" && \
     git config --global user.email "semantic-release@veil.org" && \
     git config --system --add safe.directory '*' && \
+    git pull && \
     poetry run semantic-release publish
 """
 
