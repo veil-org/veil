@@ -50,6 +50,7 @@ version_source = "tag"
 commit_version_number = true
 upload_to_release = true
 upload_to_repository = false
+build_command = "poe build_wheel"
 
 [tool.poe.tasks.clean]
 shell = """
@@ -86,6 +87,12 @@ shell = """
 shell = """
     poetry install --no-interaction --no-root --only=release
 """
+
+[tool.poe.tasks.build_wheel]
+shell = """
+    poetry build --format wheel
+"""
+
 
 [tool.poe.tasks.release]
 shell = """
