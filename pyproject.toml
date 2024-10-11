@@ -88,7 +88,9 @@ shell = """
 
 [tool.poe.tasks.release]
 shell = """
-    export GH_TOKEN="${gh_token}" && poetry run semantic-release publish
+    export GH_TOKEN="${gh_token}" && \
+    git config --system --add safe.directory '*' && \
+    poetry run semantic-release publish
 """
 
     [[tool.poe.tasks.release.args]]
