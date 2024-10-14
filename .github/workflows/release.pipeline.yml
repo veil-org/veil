@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  # after a release has been made, distributes the software artifacts to repositories
+  distribute_packages:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release-tag]')
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/build-env:latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Get github release
+      id: get_release
+      uses: cardinalby/git-get-release-action@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }} 
+      with:
+        tag: ${{ github.ref }}
+    - name: Install build deps
+      run: |
+        poe install_all_dependencies
+    - name: Build and publish
+      run: |
+        poe build
+    - name: Get release upload URL
+      id: get_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: release } = await github.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: context.ref.replace('refs/tags/', ''),
+          });
+          return release.upload_url;
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        asset_path: dist/*.whl
+        asset_name: veil-${{ github.ref }}.whl
+        asset_content_type: application/zip

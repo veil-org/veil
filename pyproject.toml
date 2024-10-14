@@ -29,19 +29,12 @@ pytest-mock = "^3.12.0"
 mkdocstrings = {extras = ["python"], version = "^0.26.2"}
 mkdocs = "^1.6.1"
 
+[tool.poetry.group.release.dependencies]
+python-semantic-release = "^7.33.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-
-
-
-
-
-
-
-[tool.poetry.group.release.dependencies]
-python-semantic-release = "^7.33.2"
 
 [tool.semantic_release]
 version_variable = [
@@ -56,9 +49,9 @@ commit_author = "semantic-release <semantic-release@veil.org>"
 commit_subject = "v{version} [skip cq][release-tag]"
 version_source = "tag"
 commit_version_number = true
-upload_to_release = true
+upload_to_release = false
 upload_to_repository = false
-build_command = "poe build_wheel"
+build_command = "poe build"
 
 [tool.poe.tasks.clean]
 shell = """
@@ -96,30 +89,17 @@ shell = """
     poetry install --no-interaction --no-root --only=release
 """
 
-[tool.poe.tasks.docs]
-interpreter = "bash"
-shell = """
-    
-"""
 
 [tool.poe.tasks.build_wheel]
 shell = """
     poetry build --format wheel
 """
 
-
 [tool.poe.tasks.release]
 shell = """
-    export GH_TOKEN="${gh_token}" && \
     git config --global user.name "semantic-release" && \
     git config --global user.email "semantic-release@veil.org" && \
     git config --system --add safe.directory '*' && \
     git pull && \
     poetry run semantic-release publish
 """
-
-    [[tool.poe.tasks.release.args]]
-    name = "gh_token"
-    options = ["--github-token"]
-    help = "GITHUB_TOKEN value passed from github action"
-    default = ""

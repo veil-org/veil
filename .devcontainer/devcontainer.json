@@ -4,18 +4,7 @@
 	"name": "Python 3",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"context": "..",
-		"args": {
-			"POETRY_VERSION": "1.6.1",
-			"POETRY_CORE_VERSION": "1.7.0",
-			"POETHEPOET_VERSION": "0.20.0",
-			"PRE_COMMIT_VERSION": "3.3.3",
-			"INSTALL_GIT": "yes",
-			"GIT_VERSION": "1:2.20.1-2+deb10u8",
-			"BASE_IMAGE": "mcr.microsoft.com/vscode/devcontainers/python",
-			"TAG": "0-3.10-buster",
-			"INSTALL_DEV_TOOLS": "yes"
-		}
+		"context": ".."
 	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
