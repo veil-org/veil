@@ -211,13 +211,13 @@ class AutologSession:
     """ Wraps an autolog session.
 
     Parameters
-        ----------
-        autologger : Autologger
-            the autolog object
-        name : Optional[str], optional
-            the experiment name, by default None
-        log_tags : StringDict, optional
-            the tags to be logged, by default dict()
+    ----------
+    autologger : Autologger
+        the autolog object
+    name : Optional[str], optional
+        the experiment name, by default None
+    log_tags : StringDict, optional
+        the tags to be logged, by default dict()
     """
 
     def __init__(
