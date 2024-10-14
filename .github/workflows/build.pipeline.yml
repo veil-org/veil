@@ -72,6 +72,9 @@ jobs:
       - code_quality
     container:
       image: ghcr.io/${{ github.repository }}/build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_GITHUB }}
     steps:
     - uses: actions/checkout@v4
       with:
