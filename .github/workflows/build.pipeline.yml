@@ -22,7 +22,7 @@ jobs:
     - name: Login to GHCR
       uses: docker/login-action@v3
       with:
-        registry: ghcr.io
+        registry: ghcr.io/veil-org
         username: ${{ github.actor }}
         password: ${{ secrets.PAT_GITHUB }}
     - name: Build and publish Docker image
