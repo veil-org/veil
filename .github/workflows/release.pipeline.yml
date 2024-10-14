@@ -5,20 +5,16 @@ on:
     tags:
       - 'v*.*.*'
 
-build_environment: &build_environment
-  runs-on: ubuntu-latest
-  container:
-    image: ghcr.io/${{ github.repository }}/build-env:latest
-    credentials:
-      username: ${{ github.actor }}
-      password: ${{ secrets.PAT_GITHUB }}
-
 jobs:
   # after a release has been made, distributes the software artifacts to repositories
   distribute_packages:
-    <<: *build_environment
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_GITHUB }}
     if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release-tag]')
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

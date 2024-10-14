@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [ "**" ]
 
-build_environment: &build_environment
-  runs-on: ubuntu-latest
-  container:
-    image: ghcr.io/${{ github.repository }}/build-env:latest
-    credentials:
-      username: ${{ github.actor }}
-      password: ${{ secrets.PAT_GITHUB }}
-
 jobs:
 
   # prepare the build environment by building a docker container
@@ -45,7 +37,12 @@ jobs:
 
   # performs code quality checks (if not specified otherwise with [skip cq])
   code_quality:
-    <<: *build_environment
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_GITHUB }}
     if: contains(github.event.head_commit.message, '[skip cq]') == false
     needs: prepare_environment
     strategy:
@@ -64,7 +61,12 @@ jobs:
   
   # attempts triggering a release according to semantic-release
   trigger_release:
-    <<: *build_environment
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_GITHUB }}
     if: github.ref == 'refs/heads/main'
     needs: 
       - prepare_environment
