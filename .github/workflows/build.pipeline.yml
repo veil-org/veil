@@ -24,7 +24,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.PAT_GITHUB }}
     - name: Build and publish Docker image
       uses: docker/build-push-action@v3
       with:
@@ -46,6 +46,10 @@ jobs:
     container:
       image: ghcr.io/${{ github.repository }}/build-env:latest
       options: --privileged
+      registry:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.PAT_GITHUB }}
     strategy:
       fail-fast: false
     steps:
