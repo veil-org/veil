@@ -6,6 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+#Location of Sphinx files
+sys.path.insert(0, os.path.abspath('../../veil'))
+
+
 project = 'veil'
 copyright = '2024, Angelo Impedovo, Giuseppe Rizzo, Antonio Di Mauro'
 author = 'Angelo Impedovo, Giuseppe Rizzo, Antonio Di Mauro'
@@ -20,4 +26,3 @@ source_suffix = ['.rst', '.md']
 templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
