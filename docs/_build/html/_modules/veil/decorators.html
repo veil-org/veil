@@ -1,0 +1,559 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>veil.decorators &mdash; veil  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            veil
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">veil</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">veil</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../veil.html">veil</a></li>
+      <li class="breadcrumb-item active">veil.decorators</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for veil.decorators</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">from</span> <span class="nn">typeguard</span> <span class="kn">import</span> <span class="n">check_type</span>
+
+<span class="kn">import</span> <span class="nn">mlflow</span>
+<span class="kn">from</span> <span class="nn">mlflow.entities</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">RunStatus</span>
+<span class="kn">from</span> <span class="nn">mlflow.tracking.fluent</span> <span class="kn">import</span> <span class="n">_get_experiment_id</span><span class="p">,</span> <span class="n">ActiveRun</span>
+<span class="kn">from</span> <span class="nn">mlflow.utils.mlflow_tags</span> <span class="kn">import</span> <span class="n">MLFLOW_GIT_COMMIT</span><span class="p">,</span> <span class="n">MLFLOW_GIT_BRANCH</span><span class="p">,</span> <span class="n">MLFLOW_GIT_REPO_URL</span>
+
+<span class="kn">from</span> <span class="nn">veil.types</span> <span class="kn">import</span> <span class="n">StringDict</span><span class="p">,</span> <span class="n">StringList</span>
+
+
+<span class="k">def</span> <span class="nf">_active_experiment_id</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_get_experiment_id</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_get_repo_info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="kn">import</span> <span class="nn">git</span>
+    <span class="kn">from</span> <span class="nn">git.exc</span> <span class="kn">import</span> <span class="n">InvalidGitRepositoryError</span><span class="p">,</span> <span class="n">NoSuchPathError</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">repo_uri</span><span class="p">,</span> <span class="n">sha_commit</span><span class="p">,</span> <span class="n">branch_name</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">(</span><span class="n">search_parent_directories</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">InvalidGitRepositoryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid Git repository: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">NoSuchPathError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid Git path: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">repo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">repo_uri</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">remotes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">config_reader</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_REPO_URL</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">repo_uri</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_REPO_URL</span><span class="si">}</span><span class="s2"> is None&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sha_commit</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">object</span><span class="o">.</span><span class="n">hexsha</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_COMMIT</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">sha_commit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_COMMIT</span><span class="si">}</span><span class="s2"> is None&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">branch_name</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">active_branch</span><span class="o">.</span><span class="n">name</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_BRANCH</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">MLFLOW_GIT_BRANCH</span><span class="si">}</span><span class="s2"> is None&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">repo_uri</span><span class="p">,</span> <span class="n">sha_commit</span><span class="p">,</span> <span class="n">branch_name</span>
+
+
+<div class="viewcode-block" id="Autologger">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.Autologger">[docs]</a>
+<span class="k">class</span> <span class="nc">Autologger</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Implements the auto-logging strategy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">is_autolog_enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">tracking_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">get_tracking_uri</span><span class="p">(),</span>
+        <span class="n">experiment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">DEFAULT_EXPERIMENT_NAME</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_autolog_enabled</span> <span class="o">=</span> <span class="n">is_autolog_enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracking_uri</span> <span class="o">=</span> <span class="n">tracking_uri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiment_name</span> <span class="o">=</span> <span class="n">experiment_name</span>
+
+        <span class="c1"># members with intended protected access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_session</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AutologSession</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_autolog_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_autolog_enabled</span>
+
+    <span class="nd">@is_autolog_enabled</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_autolog_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__is_autolog_enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tracking_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tracking_uri</span>
+
+    <span class="nd">@tracking_uri</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tracking_uri</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tracking_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">experiment_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__experiment_name</span>
+
+    <span class="nd">@experiment_name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">experiment_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__experiment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Autologger.start_session">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.Autologger.start_session">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_session</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Starts a new session.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : Optional[str], optional</span>
+<span class="sd">            the experiment name, by default None</span>
+<span class="sd">        log_tags : StringDict, optional</span>
+<span class="sd">            the tags to be logged, by default dict()</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        AutologSession</span>
+<span class="sd">            teh autolog session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">AutologSession</span><span class="p">(</span>
+            <span class="n">autologger</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">log_tags</span><span class="o">=</span><span class="n">log_tags</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Autologger.run">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.Autologger.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StringList</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Executes a new run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : Optional[str], optional</span>
+<span class="sd">            the run name, by default None</span>
+<span class="sd">        log_params : Optional[StringList], optional</span>
+<span class="sd">            the params to be logged, by default None</span>
+<span class="sd">        log_tags : StringDict, optional</span>
+<span class="sd">            the tags to be logged, by default dict()</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Run</span>
+<span class="sd">            the experiment run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Run</span><span class="p">(</span>
+            <span class="n">autologger</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">log_params</span><span class="o">=</span><span class="n">log_params</span><span class="p">,</span>
+            <span class="n">log_tags</span><span class="o">=</span><span class="n">log_tags</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MlflowIsolated">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.MlflowIsolated">[docs]</a>
+<span class="k">class</span> <span class="nc">MlflowIsolated</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Isolates an Mlflow experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">autologger</span><span class="p">:</span> <span class="n">Autologger</span>
+    <span class="p">):</span>
+        <span class="c1"># members with intended private access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="p">:</span> <span class="n">Autologger</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">autologger</span><span class="p">,</span> <span class="n">Autologger</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the decorator as well as the wrapped function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Callable</span><span class="p">)</span>
+
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">isolation_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">is_autolog_enabled</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">_current_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                <span class="c1"># 3) switch the run current active run (which is paused) within mlflow with a new one</span>
+                <span class="n">past_active_run</span><span class="p">:</span> <span class="n">ActiveRun</span> <span class="o">=</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">active_run</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">past_active_run</span><span class="p">:</span>
+                    <span class="n">mlflow</span><span class="o">.</span><span class="n">end_run</span><span class="p">(</span><span class="n">RunStatus</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">RunStatus</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">))</span>
+
+                <span class="c1"># 1) switch the tracking uri currently used by mlflow to the one in the autologger</span>
+                <span class="n">past_tracking_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">get_tracking_uri</span><span class="p">()</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">set_tracking_uri</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">tracking_uri</span><span class="p">)</span>
+
+                <span class="c1"># 2) switch the experiment currently used by mlflow to the one in the autologger</span>
+                <span class="n">past_active_experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_active_experiment_id</span><span class="p">()</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">set_experiment</span><span class="p">(</span>
+                    <span class="n">experiment_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">experiment_name</span><span class="p">)</span>
+
+                <span class="c1"># performs the function workload</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="c1"># 5) switch back to the previosuly activated experiment</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">set_experiment</span><span class="p">(</span><span class="n">experiment_id</span><span class="o">=</span><span class="n">past_active_experiment_id</span><span class="p">)</span>
+                <span class="n">past_active_experiment_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="c1"># 6) switch back to the previously targeted tracking server</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">set_tracking_uri</span><span class="p">(</span><span class="n">past_tracking_uri</span><span class="p">)</span>
+                <span class="n">past_tracking_uri</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="c1"># 4) switch back to the previously activated run</span>
+                <span class="k">if</span> <span class="n">past_active_run</span><span class="p">:</span>
+                    <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="n">past_active_run</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
+                <span class="n">past_active_run</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">isolation_wrapper</span></div>
+
+
+
+<div class="viewcode-block" id="AutologSession">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.AutologSession">[docs]</a>
+<span class="k">class</span> <span class="nc">AutologSession</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Wraps an autolog session.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        autologger : Autologger</span>
+<span class="sd">            the autolog object</span>
+<span class="sd">        name : Optional[str], optional</span>
+<span class="sd">            the experiment name, by default None</span>
+<span class="sd">        log_tags : StringDict, optional</span>
+<span class="sd">            the tags to be logged, by default dict()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">autologger</span><span class="p">:</span> <span class="n">Autologger</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(),</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_tags</span> <span class="o">=</span> <span class="n">log_tags</span>
+
+        <span class="c1"># members with intended private access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="p">:</span> <span class="n">Autologger</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">autologger</span><span class="p">,</span> <span class="n">Autologger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__run_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__past_session</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AutologSession</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">autologger</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Autologger</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__run_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span>
+
+    <span class="nd">@name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">log_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StringDict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_tags</span>
+
+    <span class="nd">@log_tags</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">log_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">StringDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">StringDict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># switch the session currently used by the autologger to this one</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__past_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">_current_session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">_current_session</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="nd">@MlflowIsolated</span><span class="p">(</span><span class="n">autologger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">do_enter</span><span class="p">():</span>
+            <span class="c1"># starting a session means managing the context so to:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">is_autolog_enabled</span><span class="p">:</span>
+                <span class="c1"># immediately starts and stops a novel parent run associated with this context</span>
+                <span class="c1"># note that this run will be resumed within run-annotated functions.</span>
+                <span class="n">run</span><span class="p">:</span> <span class="n">ActiveRun</span> <span class="o">=</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span><span class="n">run_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">end_run</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">RunStatus</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">RunStatus</span><span class="o">.</span><span class="n">RUNNING</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__run_id</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">run_id</span>
+
+        <span class="n">do_enter</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+
+        <span class="nd">@MlflowIsolated</span><span class="p">(</span><span class="n">autologger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">do_exit</span><span class="p">():</span>
+            <span class="c1"># terminating a session means managing the context so to:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">is_autolog_enabled</span><span class="p">:</span>
+
+                <span class="c1"># immediately starts and stops the parent run associated with this context</span>
+                <span class="c1"># note that it is terminated with a given status, according to exceptions within the</span>
+                <span class="c1"># context manager.</span>
+                <span class="n">termination_status</span><span class="p">:</span> <span class="n">RunStatus</span> <span class="o">=</span> <span class="n">RunStatus</span><span class="o">.</span><span class="n">FINISHED</span>
+                <span class="k">if</span> <span class="n">exc_type</span><span class="p">:</span>
+                    <span class="n">termination_status</span> <span class="o">=</span> <span class="n">RunStatus</span><span class="o">.</span><span class="n">FAILED</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span>
+                    <span class="n">run_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">_current_session</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">end_run</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">RunStatus</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">termination_status</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__run_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">do_exit</span><span class="p">()</span>
+
+        <span class="c1"># switch back the session currently used by the autologger to the previous one</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autologger</span><span class="o">.</span><span class="n">_current_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__past_session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__past_session</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="Run">
+<a class="viewcode-back" href="../../veil.html#veil.decorators.Run">[docs]</a>
+<span class="k">class</span> <span class="nc">Run</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates an Mlflow run with auto-logging features.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    autologger : Autologger</span>
+<span class="sd">        the autologger object</span>
+<span class="sd">    name : Optional[str], optional</span>
+<span class="sd">        the experiment name, by default None</span>
+<span class="sd">    log_params : Optional[StringList], optional</span>
+<span class="sd">        the params to be logged, by default None</span>
+<span class="sd">    log_tags : StringDict, optional</span>
+<span class="sd">        the tags to be logged, by default dict()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">autologger</span><span class="p">:</span> <span class="n">Autologger</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StringList</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(),</span>
+    <span class="p">):</span>
+        <span class="c1"># members with intended private access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="p">:</span> <span class="n">Autologger</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">autologger</span><span class="p">,</span> <span class="n">Autologger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__log_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StringList</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span>
+            <span class="n">log_params</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StringList</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__log_tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="n">check_type</span><span class="p">(</span><span class="n">log_tags</span><span class="p">,</span> <span class="n">StringDict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">autologger</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Autologger</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">log_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StringList</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_params</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">log_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StringDict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_tags</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute the decorator as well as the wrapped function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_type</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">Callable</span><span class="p">)</span>
+
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="nd">@MlflowIsolated</span><span class="p">(</span><span class="n">autologger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">is_autolog_enabled</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">_current_session</span><span class="p">:</span>
+
+                <span class="c1"># resume the parent run</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span>
+                    <span class="n">run_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">_current_session</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
+
+                <span class="c1"># retrieves the tags from the context</span>
+                <span class="n">tags</span><span class="p">:</span> <span class="n">StringDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__autologger</span><span class="o">.</span><span class="n">_current_session</span><span class="o">.</span><span class="n">log_tags</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+                <span class="c1"># ...then overrides them with run-bound tags...</span>
+                <span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__log_tags</span><span class="p">)</span>
+
+                <span class="c1"># ...and eventuallly sets mlflow special tags for .git info</span>
+                <span class="n">repo_uri</span><span class="p">,</span> <span class="n">sha_commit</span><span class="p">,</span> <span class="n">branch_name</span> <span class="o">=</span> <span class="n">_get_repo_info</span><span class="p">()</span>
+                <span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="n">MLFLOW_GIT_REPO_URL</span><span class="p">:</span> <span class="n">repo_uri</span><span class="p">,</span>
+                    <span class="n">MLFLOW_GIT_COMMIT</span><span class="p">:</span> <span class="n">sha_commit</span><span class="p">,</span>
+                    <span class="n">MLFLOW_GIT_BRANCH</span><span class="p">:</span> <span class="n">branch_name</span><span class="p">,</span>
+                <span class="p">})</span>
+
+                <span class="c1"># uses the user provided run name instead of function name, if any</span>
+                <span class="n">_run_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_run_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name</span>
+
+                <span class="c1"># starts the child run with a context manager (eventually closing it gracefully in case of exceptions)</span>
+                <span class="k">with</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span><span class="n">run_name</span><span class="o">=</span><span class="n">_run_name</span><span class="p">,</span> <span class="n">nested</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">active_run</span><span class="p">:</span>
+
+                    <span class="c1"># then logs tags and...</span>
+                    <span class="n">mlflow</span><span class="o">.</span><span class="n">set_tags</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+
+                    <span class="c1"># ...the params with which the funciton has been called</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__log_params</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_params</span><span class="p">:</span>
+                                <span class="n">mlflow</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">mlflow</span><span class="o">.</span><span class="n">log_param</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+                    <span class="c1"># finally the function gets invoked</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="c1"># stops the parent run</span>
+                <span class="n">mlflow</span><span class="o">.</span><span class="n">end_run</span><span class="p">()</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="kn">import</span> <span class="nn">veil</span>
+    <span class="kn">from</span> <span class="nn">veil</span> <span class="kn">import</span> <span class="n">run</span><span class="p">,</span> <span class="n">start_session</span>
+
+    <span class="n">mlflow</span><span class="o">.</span><span class="n">set_experiment</span><span class="p">(</span><span class="s2">&quot;Default&quot;</span><span class="p">)</span>
+    <span class="n">veil</span><span class="o">.</span><span class="n">set_experiment_name</span><span class="p">(</span><span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;experiment_autolog&quot;</span><span class="p">)</span>
+
+    <span class="nd">@run</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">my_operator</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+
+    <span class="nd">@run</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">faulty_operator</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+    <span class="k">with</span> <span class="n">start_session</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_parent_faboulous_run&quot;</span><span class="p">):</span>
+        <span class="n">my_operator</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">start_session</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_parent_second_faboulous_run&quot;</span><span class="p">):</span>
+            <span class="n">my_operator</span><span class="p">()</span>
+            <span class="n">mlflow</span><span class="o">.</span><span class="n">set_experiment</span><span class="p">(</span><span class="s2">&quot;My Experiment&quot;</span><span class="p">)</span>
+            <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">(</span><span class="n">run_name</span><span class="o">=</span><span class="s2">&quot;My Run Name&quot;</span><span class="p">)</span>
+            <span class="n">faulty_operator</span><span class="p">()</span>
+            <span class="n">my_operator</span><span class="p">()</span>
+
+        <span class="n">my_operator</span><span class="p">()</span>
+
+    <span class="n">my_operator</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Angelo Impedovo, Giuseppe Rizzo, Antonio Di Mauro.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
