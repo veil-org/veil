@@ -14,7 +14,7 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.PAT_GITHUB }}
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release-tag]')
+    if: github.ref == 'refs/heads/main') # && contains(github.event.head_commit.message, '[release-tag]' not CATCHED
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
