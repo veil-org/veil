@@ -5,26 +5,23 @@ on:
     tags:
       - 'v*.*.*'
 
+build_environment: &build_environment
+  runs-on: ubuntu-latest
+  container:
+    image: ghcr.io/${{ github.repository }}/build-env:latest
+    credentials:
+      username: ${{ github.actor }}
+      password: ${{ secrets.PAT_GITHUB }}
+
 jobs:
   # after a release has been made, distributes the software artifacts to repositories
   distribute_packages:
+    <<: *build_environment
     if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release-tag]')
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository }}/build-env:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.PAT_GITHUB }}
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: Get github release
-      id: get_release
-      uses: cardinalby/git-get-release-action@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }} 
-      with:
-        tag: ${{ github.ref }}
     - name: Install build deps
       run: |
         poe install_all_dependencies
