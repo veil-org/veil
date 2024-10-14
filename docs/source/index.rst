@@ -6,7 +6,7 @@
 Veil documentation
 ==================
 
-.. include:: ../README.md
+.. include:: ../../README.md
    :parser: markdown
 
 .. toctree::
