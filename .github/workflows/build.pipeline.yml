@@ -98,6 +98,8 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.PAT_GITHUB }}
+    needs:
+      - prepare_environment
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
