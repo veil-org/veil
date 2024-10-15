@@ -77,14 +77,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_GITHUB }}
     - name: Install release deps
       run: |
         poe install_release_dependencies
     - name: Trigger distribution
       # a PAT is needed instead of GITHUB_TOKEN since otherwise subsequent commit do not trigger any action.
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.PAT_GITHUB }}
       run: |
         poe release
 
