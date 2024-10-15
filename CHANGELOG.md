@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.0.10 (2024-10-15)
+
+### Fix
+
+* Refactored project 19 ([`584ffe7`](https://github.com/veil-org/veil/commit/584ffe7b42141d59eb8a7b45e1faedb9d13b9343))
+
 ## v0.0.9 (2024-10-15)
 
 ### Fix

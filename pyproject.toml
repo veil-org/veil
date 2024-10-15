@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "veil"
-version = "0.0.9"
+version = "0.0.10"
 description = ""
 authors = [
   "Angelo Impedovo <angelo.impedovo@niuma.it>",
