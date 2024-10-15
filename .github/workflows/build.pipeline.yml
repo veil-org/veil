@@ -3,10 +3,8 @@ name: CI
 on:
   push:
     branches: [ "**" ]
-    skip_checks: true
   pull_request:
     branches: [ "**" ]
-    skip_checks: true
 
 jobs:
 
