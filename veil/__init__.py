@@ -6,7 +6,7 @@ from veil.decorators import Autologger
 
 from veil.types import StringDict, StringList
 
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 
 
 #####################
