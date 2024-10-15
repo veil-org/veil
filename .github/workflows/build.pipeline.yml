@@ -103,23 +103,25 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT_GITHUB }}
     - name: Install build deps
       run: |
         poe install_all_dependencies
-    - name: Build and publish
+    - name: Get version number
+      id: get_version
+      run: |
+        echo "::set-output name=version::v$(poetry version -s)"
+    - name: Build artifacts
       run: |
         poe build
-    - name: Get release upload URL
+    - name: Get Release Info
       id: get_release
-      uses: actions/github-script@v6
+      uses: kaliber5/action-get-release@v1
       with:
-        script: |
-          const { data: release } = await github.repos.getReleaseByTag({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            tag: context.ref.replace('refs/tags/', ''),
-          });
-          return release.upload_url;
+        token: ${{ secrets.PAT_GITHUB }}
+        tag_name: ${{ steps.get_version.outputs.version }}
     - name: Upload release asset
       uses: actions/upload-release-asset@v1
       with:
