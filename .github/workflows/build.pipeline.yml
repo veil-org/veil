@@ -48,7 +48,8 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Install code quality deps
       run: |
         poe install_all_dependencies
@@ -72,16 +73,14 @@ jobs:
       - prepare_environment
       - code_quality
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.PAT_GITHUB }}
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Install release deps
       run: |
         poe install_release_dependencies
     - name: Trigger distribution
       # a PAT is needed instead of GITHUB_TOKEN since otherwise subsequent commit do not trigger any action.
       env:
-        GH_TOKEN: ${{ secrets.PAT_GITHUB }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         poe release
