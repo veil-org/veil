@@ -97,6 +97,7 @@ shell = """
 
 [tool.poe.tasks.release]
 shell = """
+    env && \
     git config --global user.name "semantic-release" && \
     git config --global user.email "semantic-release@veil.org" && \
     git config --system --add safe.directory '*' && \
